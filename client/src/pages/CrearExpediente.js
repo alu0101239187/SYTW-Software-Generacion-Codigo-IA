@@ -1,154 +1,94 @@
-import { useState } from "react";
-import {
-  Container,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Paper,
-} from "@mui/material";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
-const CrearExpediente = () => {
-  const [expediente, setExpediente] = useState({
-    numero: "",
-    dni: "",
-    nombre: "",
-    apellidos: "",
-    tipo: "",
-    estado: "",
-    fecha: "",
-    unidadAdministrativa: "",
-  });
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+function CrearExpediente() {
+    const [form, setForm] = useState({
+        numero: '',
+        dni: '',
+        nombre: '',
+        apellidos: '',
+        tipo: '',
+        estado: '',
+        fecha: '',
+        unidad: ''
+    });
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setExpediente({ ...expediente, [e.target.name]: e.target.value });
-  };
+    const handleChange = e => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    if (Object.values(expediente).some((value) => value === "")) {
-      setError("Todos los campos son obligatorios");
-      return;
-    }
-    try {
-      await axios.post("http://localhost:5000/expedientes", expediente, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Error al crear el expediente");
-    }
-  };
+    const handleSubmit = async e => {
+        e.preventDefault();
+        if (Object.values(form).some(val => val.trim() === '')) {
+            setError('Todos los campos son obligatorios');
+            return;
+        }
 
-  return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ padding: 4, marginTop: 4 }}>
-        <Typography variant="h5" align="center" gutterBottom>
-          Crear Expediente
-        </Typography>
-        {error && (
-          <Typography color="error" align="center">
-            {error}
-          </Typography>
-        )}
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Número de Expediente"
-            name="numero"
-            margin="normal"
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="DNI"
-            name="dni"
-            margin="normal"
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Nombre"
-            name="nombre"
-            margin="normal"
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Apellidos"
-            name="apellidos"
-            margin="normal"
-            onChange={handleChange}
-          />
-          <TextField
-            select
-            fullWidth
-            label="Tipo de Petición"
-            name="tipo"
-            margin="normal"
-            onChange={handleChange}
-          >
-            <MenuItem value="Contratos">Contratos</MenuItem>
-            <MenuItem value="Estadística">Estadística</MenuItem>
-            <MenuItem value="Institucional">Institucional</MenuItem>
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            label="Estado"
-            name="estado"
-            margin="normal"
-            onChange={handleChange}
-          >
-            <MenuItem value="Creada">Creada</MenuItem>
-            <MenuItem value="Pendiente">Pendiente</MenuItem>
-            <MenuItem value="Estimada">Estimada</MenuItem>
-            <MenuItem value="Desestimada">Desestimada</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            type="date"
-            label="Fecha de Expediente"
-            name="fechaExpediente"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Unidad Administrativa"
-            name="unidadAdministrativa"
-            margin="normal"
-            onChange={handleChange}
-          />
-          <Button
-            fullWidth
-            variant="contained"
-            color="secondary"
-            sx={{ mt: 2 }}
-            onClick={() => navigate("/dashboard")}
-          >
-            Cancelar
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            type="submit"
-            sx={{ mt: 1 }}
-          >
-            Añadir Expediente
-          </Button>
-        </form>
-      </Paper>
-    </Container>
-  );
-};
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post('http://localhost:5000/api/expedientes', form, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.mensaje || 'Error al crear expediente');
+        }
+    };
+
+    return (
+        <div>
+            <Navbar />
+            <div style={{ padding: '1rem' }}>
+                <h2>Crear Expediente</h2>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <form onSubmit={handleSubmit}>
+                    <div><label>Número de expediente:</label><br />
+                        <input type="text" name="numero" value={form.numero} onChange={handleChange} />
+                    </div>
+                    <div><label>DNI:</label><br />
+                        <input type="text" name="dni" value={form.dni} onChange={handleChange} />
+                    </div>
+                    <div><label>Nombre del solicitante:</label><br />
+                        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} />
+                    </div>
+                    <div><label>Apellidos:</label><br />
+                        <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} />
+                    </div>
+                    <div><label>Tipo de petición:</label><br />
+                        <select name="tipo" value={form.tipo} onChange={handleChange}>
+                            <option value="">Selecciona</option>
+                            <option value="Contratos">Contratos</option>
+                            <option value="Estadística">Estadística</option>
+                            <option value="Institucional">Institucional</option>
+                        </select>
+                    </div>
+                    <div><label>Estado de la petición:</label><br />
+                        <select name="estado" value={form.estado} onChange={handleChange}>
+                            <option value="">Selecciona</option>
+                            <option value="Creada">Creada</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Estimada">Estimada</option>
+                            <option value="Desestimada">Desestimada</option>
+                        </select>
+                    </div>
+                    <div><label>Fecha de expediente:</label><br />
+                        <input type="date" name="fecha" value={form.fecha} onChange={handleChange} />
+                    </div>
+                    <div><label>Unidad administrativa:</label><br />
+                        <input type="text" name="unidad" value={form.unidad} onChange={handleChange} />
+                    </div>
+
+                    <br />
+                    <button type="button" onClick={() => navigate('/')}>Cancelar</button>{' '}
+                    <button type="submit">Añadir expediente</button>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 export default CrearExpediente;

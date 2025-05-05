@@ -1,163 +1,123 @@
-import { useState, useEffect } from "react";
-import {
-  Container,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Paper,
-} from "@mui/material";
-import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import Navbar from '../components/Navbar';
 
-const ModificarExpediente = () => {
-  const { id } = useParams();
-  const [expediente, setExpediente] = useState(null);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+function ModificarExpediente() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    axios
-      .get(`http://localhost:5000/expedientes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => setExpediente(response.data))
-      .catch(() => setError("Error al cargar expediente"));
-  }, [id]);
+    const [form, setForm] = useState({
+        numero: '',
+        dni: '',
+        nombre: '',
+        apellidos: '',
+        tipo: '',
+        estado: '',
+        fecha: '',
+        unidad: ''
+    });
 
-  const handleChange = (e) => {
-    setExpediente({ ...expediente, [e.target.name]: e.target.value });
-  };
+    const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      await axios.put(`http://localhost:5000/expedientes/${id}`, expediente, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate("/dashboard");
-    } catch {
-      setError("Error al modificar el expediente");
-    }
-  };
+    useEffect(() => {
+        axios.get(`http://localhost:5000/api/expedientes/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+                const datos = res.data;
+                setForm({
+                    numero: datos.numero,
+                    dni: datos.dni,
+                    nombre: datos.nombre,
+                    apellidos: datos.apellidos,
+                    tipo: datos.tipo,
+                    estado: datos.estado,
+                    fecha: datos.fecha.split('T')[0], // solo yyyy-mm-dd
+                    unidad: datos.unidad
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                setError('Error al cargar el expediente.');
+            });
+    }, [id, token]);
 
-  if (!expediente) return <Typography>Cargando...</Typography>;
+    const handleChange = e => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    };
 
-  return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ padding: 4, marginTop: 4 }}>
-        <Typography variant="h5" align="center" gutterBottom>
-          Modificar Expediente
-        </Typography>
-        {error && (
-          <Typography color="error" align="center">
-            {error}
-          </Typography>
-        )}
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Número de Expediente"
-            name="numero"
-            margin="normal"
-            value={expediente.numero}
-            disabled
-          />
-          <TextField
-            fullWidth
-            label="DNI"
-            name="dni"
-            margin="normal"
-            value={expediente.dni}
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Nombre"
-            name="nombre"
-            margin="normal"
-            value={expediente.nombre}
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Apellidos"
-            name="apellidos"
-            margin="normal"
-            value={expediente.apellidos}
-            onChange={handleChange}
-          />
-          <TextField
-            select
-            fullWidth
-            label="Tipo de Petición"
-            name="tipoPeticion"
-            margin="normal"
-            value={expediente.tipoPeticion}
-            onChange={handleChange}
-          >
-            <MenuItem value="Contratos">Contratos</MenuItem>
-            <MenuItem value="Estadística">Estadística</MenuItem>
-            <MenuItem value="Institucional">Institucional</MenuItem>
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            label="Estado"
-            name="estado"
-            margin="normal"
-            value={expediente.estado}
-            onChange={handleChange}
-          >
-            <MenuItem value="Creada">Creada</MenuItem>
-            <MenuItem value="Pendiente">Pendiente</MenuItem>
-            <MenuItem value="Estimada">Estimada</MenuItem>
-            <MenuItem value="Desestimada">Desestimada</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            type="date"
-            label="Fecha de Expediente"
-            name="fecha"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            value={expediente.fechaExpediente}
-            onChange={handleChange}
-          />
-          <TextField
-            fullWidth
-            label="Unidad Administrativa"
-            name="unidadAdministrativa"
-            margin="normal"
-            value={expediente.unidadAdministrativa}
-            onChange={handleChange}
-          />
-          <Button
-            fullWidth
-            variant="contained"
-            color="secondary"
-            sx={{ mt: 2 }}
-            onClick={() => navigate("/dashboard")}
-          >
-            Cancelar
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            type="submit"
-            sx={{ mt: 1 }}
-          >
-            Guardar Cambios
-          </Button>
-        </form>
-      </Paper>
-    </Container>
-  );
-};
+    const handleSubmit = e => {
+        e.preventDefault();
+
+        // Validación básica
+        const campos = Object.values(form);
+        if (campos.some(c => c === '')) {
+            setError('Todos los campos deben estar completos.');
+            return;
+        }
+
+        axios.put(`http://localhost:5000/api/expedientes/${id}`, form, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(() => navigate('/'))
+            .catch(err => {
+                console.error(err);
+                setError('Error al modificar el expediente.');
+            });
+    };
+
+    return (
+        <div>
+            <Navbar />
+            <div style={{ padding: '1rem' }}>
+                <h2>Modificar Expediente</h2>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+
+                <form onSubmit={handleSubmit}>
+                    <label>Número de expediente (no editable):</label><br />
+                    <input type="text" name="numero" value={form.numero} disabled /><br /><br />
+
+                    <label>DNI:</label><br />
+                    <input type="text" name="dni" value={form.dni} onChange={handleChange} /><br /><br />
+
+                    <label>Nombre:</label><br />
+                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} /><br /><br />
+
+                    <label>Apellidos:</label><br />
+                    <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} /><br /><br />
+
+                    <label>Tipo de petición:</label><br />
+                    <select name="tipo" value={form.tipo} onChange={handleChange}>
+                        <option value="">Seleccione...</option>
+                        <option value="Contratos">Contratos</option>
+                        <option value="Estadística">Estadística</option>
+                        <option value="Institucional">Institucional</option>
+                    </select><br /><br />
+
+                    <label>Estado:</label><br />
+                    <select name="estado" value={form.estado} onChange={handleChange}>
+                        <option value="">Seleccione...</option>
+                        <option value="Creada">Creada</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Estimada">Estimada</option>
+                        <option value="Desestimada">Desestimada</option>
+                    </select><br /><br />
+
+                    <label>Fecha del expediente:</label><br />
+                    <input type="date" name="fecha" value={form.fecha} onChange={handleChange} /><br /><br />
+
+                    <label>Unidad administrativa:</label><br />
+                    <input type="text" name="unidad" value={form.unidad} onChange={handleChange} /><br /><br />
+
+                    <button type="button" onClick={() => navigate('/')}>Cancelar</button>{' '}
+                    <button type="submit">Modificar expediente</button>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 export default ModificarExpediente;

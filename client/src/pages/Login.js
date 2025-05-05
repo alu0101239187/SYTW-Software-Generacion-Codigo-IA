@@ -1,60 +1,49 @@
-import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { TextField, Button, Container, Typography, Box } from "@mui/material";
+// client/src/pages/Login.js
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+function Login() {
+    const [nombreUsuario, setNombreUsuario] = useState('');
+    const [contraseña, setContraseña] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await login(username, password);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    const handleSubmit = async e => {
+        e.preventDefault();
+        try {
+            const res = await axios.post('http://localhost:5000/api/auth/login', {
+                nombreUsuario,
+                contraseña
+            });
+            localStorage.setItem('token', res.data.token);
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.mensaje || 'Error al iniciar sesión');
+        }
+    };
 
-  return (
-    <Container maxWidth="xs">
-      <Box sx={{ mt: 8, textAlign: "center" }}>
-        <Typography variant="h4" color="primary">
-          Iniciar Sesión
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Usuario"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            label="Contraseña"
-            type="password"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {error && <Typography color="error">{error}</Typography>}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-          >
-            Iniciar Sesión
-          </Button>
-        </form>
-      </Box>
-    </Container>
-  );
-};
+    return (
+        <div>
+            <h2>Iniciar Sesión</h2>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    placeholder="Nombre de usuario"
+                    value={nombreUsuario}
+                    onChange={e => setNombreUsuario(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={contraseña}
+                    onChange={e => setContraseña(e.target.value)}
+                />
+                <button type="submit">Entrar</button>
+            </form>
+        </div>
+    );
+}
 
 export default Login;

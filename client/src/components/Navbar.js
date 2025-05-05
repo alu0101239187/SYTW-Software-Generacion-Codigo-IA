@@ -1,30 +1,22 @@
-import { AppBar, Toolbar, Button, Typography } from "@mui/material";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+// client/src/components/Navbar.js
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
-  const { logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+function Navbar() {
+    const navigate = useNavigate();
 
-  return (
-    <AppBar position="static" color="primary">
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Expedientes
-        </Typography>
-        <Button color="inherit" onClick={() => navigate("/crear-expediente")}>
-          Crear Expediente
-        </Button>
-        <Button color="inherit" onClick={() => navigate("/generar-informe")}>
-          Generar Informe
-        </Button>
-        <Button color="inherit" onClick={logout}>
-          Cerrar Sesión
-        </Button>
-      </Toolbar>
-    </AppBar>
-  );
-};
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
+
+    return (
+        <nav style={{ display: 'flex', gap: '1rem', padding: '1rem', borderBottom: '1px solid #ccc' }}>
+            <button onClick={() => navigate('/crear')}>Crear expediente</button>
+            <button onClick={() => navigate('/informes')}>Generar informe</button>
+            <button onClick={handleLogout}>Cerrar sesión</button>
+        </nav>
+    );
+}
 
 export default Navbar;
